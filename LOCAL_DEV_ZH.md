@@ -327,6 +327,68 @@ n8n: {
 }
 ```
 
+### 9.6 `bun run dev` 卡在 `Waiting for agent to be ready ... 120s`
+
+如果日志里出现类似内容：
+
+```text
+[eliza] Waiting for agent to be ready...
+[n8n-sidecar] ...
+[eliza] Agent runtime not ready after 120s (port 31337 is up but /api/health never reported ready)
+```
+
+这通常说明当前不是 `fswebcam` 的问题，而是本地 `n8n` sidecar 在启动阶段卡住了。
+
+这一类问题在 WSL 下尤其常见，典型特征是日志里出现 Windows 路径，例如：
+
+```text
+/mnt/d/Program Files/nodejs/npx
+```
+
+这表示 Eliza 正在 WSL 里调用 Windows 侧的 `npx` 去拉起本地 `n8n`，非常容易导致 sidecar 启动异常、孤儿进程清理失败，进而让 `/api/health` 长时间不 ready。
+
+最直接的规避方式是：先禁用本地 `n8n` sidecar。
+
+例如准备一个 `eliza.local.json5`：
+
+```json5
+{
+  logging: {
+    level: "info",
+  },
+  ui: {
+    assistant: {
+      name: "Eliza",
+    },
+  },
+  n8n: {
+    enabled: false,
+    localEnabled: false,
+  },
+}
+```
+
+然后用这个配置启动：
+
+```bash
+ELIZA_CONFIG_PATH=$PWD/eliza.local.json5 bun run dev
+```
+
+如果你只想先验证后端是否正常，也可以直接用更稳的后端路径：
+
+```bash
+ELIZA_CONFIG_PATH=$PWD/eliza.local.json5 bun run --cwd packages/agent start
+```
+
+补充说明：
+
+- `n8n.localEnabled=false`：禁止自动拉起本地 `n8n` sidecar
+- `n8n.enabled=false`：作为总开关，连 `@elizaos/plugin-n8n-workflow` 的自动启用也一起关掉
+- 这不会影响普通聊天、基础 Agent 启动、模型调用等核心流程
+- 会影响依赖本地 `n8n` 的自动化/工作流能力
+
+如果你后续确实需要本地 `n8n`，建议优先确保 WSL 内使用的是 Linux 自己的 `node` / `npm` / `npx`，而不是 `/mnt/.../Program Files/nodejs/npx` 这种 Windows 路径。
+
 ## 10. 本文结论
 
 当前仓库最稳的本地可运行方案，不是根目录 `bun run dev`，而是：

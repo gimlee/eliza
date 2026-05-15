@@ -29,3 +29,8 @@
 我已经安装了fswebcam，直接运行bun run dev,
 但启动不了,如图：
 ![alt text](image.png)
+
+# P7
+你提到：
+如果你后续确实需要本地 n8n，建议优先确保 WSL 内使用的是 Linux 自己的 node / npm / npx，而不是 /mnt/.../Program Files/nodejs/npx 这种
+我需要本地n8n，请在linux中安装 node / npm / npx。
