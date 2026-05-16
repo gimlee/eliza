@@ -61,7 +61,13 @@ export interface BootSidecarOptions {
   enabled?: boolean;
   version?: string;
   startPort?: number;
-  /** Timeout in ms to wait for "ready" or "error". Default 60s. */
+  /**
+   * Timeout in ms to wait for "ready" or "error". Default 180s.
+   *
+   * First-run local n8n can spend 30-90s populating the npm cache before the
+   * child process is even able to boot. Keep this aligned with the sidecar's
+   * own readiness budget so fresh dev environments don't time out early.
+   */
   readinessTimeoutMs?: number;
   /** Override the dynamic loader for tests. */
   loadModule?: () => Promise<SidecarModule>;
@@ -87,7 +93,7 @@ export async function bootLocalN8nSidecar(
   options: BootSidecarOptions = {},
 ): Promise<SidecarBootResult | null> {
   const loadModule = options.loadModule ?? loadSidecarModule;
-  const readinessTimeoutMs = options.readinessTimeoutMs ?? 60_000;
+  const readinessTimeoutMs = options.readinessTimeoutMs ?? 180_000;
 
   let mod: SidecarModule;
   try {

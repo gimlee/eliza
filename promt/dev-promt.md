@@ -34,3 +34,22 @@
 你提到：
 如果你后续确实需要本地 n8n，建议优先确保 WSL 内使用的是 Linux 自己的 node / npm / npx，而不是 /mnt/.../Program Files/nodejs/npx 这种
 我需要本地n8n，请在linux中安装 node / npm / npx。
+
+# P8
+我使用bun run dev启动失败：
+![alt text](image-1.png)
+请解决问题
+
+# P9
+从Windows端访问：http://172.30.2.220:2138/ 报错：
+![alt text](image-2.png)
+
+# P10
+点击“本地”后，报错：
+![alt text](image-3.png)
+
+# P10
+你总结下上面所有的启动问题，是哪些原因导致本地编译启动失败，写到文档中。
+是不是不是环境配置问题，更多的是某些包缺失、下载失败的原因导致的？
+所以没有代码问题、环境问题、配置问题？
+那我换个电脑编译，是不是应该也可以正常启动？

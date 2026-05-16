@@ -867,6 +867,7 @@ function nativeModuleStubPlugin(): Plugin {
     nativePackages.add("llama-cpp-capacitor");
   }
   const nativeScopeRe = /^@node-llama-cpp\//;
+  const keyringScopeRe = /^@napi-rs\/keyring(?:$|[-/])/;
   // Capacitor native plugins — mobile-only, must never run in the browser.
   // Stubbing prevents Rollup from failing when bun workspaces don't hoist them.
   const capacitorNativeScopeRe = /^@capacitor\/(?!core)(.+)$/;
@@ -921,6 +922,10 @@ function nativeModuleStubPlugin(): Plugin {
         : id.split("/")[0];
       // Scoped: @node-llama-cpp/*
       if (nativeScopeRe.test(id)) return VIRTUAL_PREFIX + id;
+      // Native keychain bindings are server-only. If they leak into the
+      // renderer graph through vault helpers, stub them before Vite tries to
+      // read platform .node binaries during dependency optimization.
+      if (keyringScopeRe.test(id)) return VIRTUAL_PREFIX + id;
       // Capacitor native plugins (@capacitor/* except @capacitor/core)
       if (capacitorNativeScopeRe.test(id) && !IS_CAPACITOR_MOBILE_BUILD) {
         return VIRTUAL_PREFIX + id;
@@ -1827,6 +1832,11 @@ export default defineConfig({
       // Node-only connector; LifeOps server services may dynamically import it,
       // but the renderer must not parse its Baileys/qrcode-terminal graph.
       "@elizaos/plugin-whatsapp",
+      // Native keychain access is server-only. Excluding it prevents Vite's
+      // optimizer from traversing platform-specific .node bindings.
+      "@napi-rs/keyring",
+      "@napi-rs/keyring-linux-x64-gnu",
+      "@napi-rs/keyring-linux-x64-musl",
     ],
   },
   build: {

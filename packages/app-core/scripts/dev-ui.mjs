@@ -651,7 +651,13 @@ function waitForPort(port, { timeout = 120_000, interval = 500 } = {}) {
 
 async function waitForAgentReady(
   port,
-  { timeout = 120_000, interval = 1000 } = {},
+  {
+    timeout = Number.parseInt(
+      process.env.ELIZA_DEV_AGENT_READY_TIMEOUT_MS ?? "",
+      10,
+    ) || 300_000,
+    interval = 1000,
+  } = {},
 ) {
   const deadline = Date.now() + timeout;
   const url = `http://127.0.0.1:${port}/api/health`;
@@ -944,7 +950,12 @@ if (uiOnly) {
 
   const devServerEntry = resolveDevServerEntryRelativePath(cwd);
 
-  const apiCmd = hasBun
+  const forceNodeApiWatcher =
+    process.env.ELIZA_DEV_API_RUNTIME === "node" ||
+    (!!process.env.WSL_DISTRO_NAME &&
+      process.env.ELIZA_DEV_API_RUNTIME !== "bun");
+
+  const apiCmd = hasBun && !forceNodeApiWatcher
     ? [
         "bun",
         "--no-install",
